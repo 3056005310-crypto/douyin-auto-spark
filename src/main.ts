@@ -13,10 +13,13 @@ const FAILURE_SCREENSHOT_PATH = 'artifacts/failure-screenshot.png'
 
 /**
  * 启动本机 Chrome 浏览器并携带 Cookie 访问抖音聊天页。
+ *
+ * @returns 页面自动化任务完成后返回。
  */
 async function main(): Promise<void> {
   const browserPath = resolveBrowserPath()
   const headless = resolveHeadless()
+  const pauseAfterPageOpen = resolvePauseAfterPageOpen()
   const autoClose = resolveAutoClose()
   const includeYiyanSource = resolveYiyanIncludeSource()
   const douyinCookies = resolveDouyinCookies()
@@ -36,6 +39,16 @@ async function main(): Promise<void> {
     await page.goto('https://www.douyin.com/chat', {
       waitUntil: 'domcontentloaded',
     })
+
+    if (pauseAfterPageOpen) {
+      const readline = createInterface({
+        input,
+        output,
+      })
+
+      await readline.question('抖音聊天页已打开，按回车键继续执行...')
+      readline.close()
+    }
 
     await page.waitForTimeout(10000)
 
@@ -153,6 +166,25 @@ function resolveHeadless(): boolean {
   }
 
   throw new Error('PLAYWRIGHT_HEADLESS 只能配置为 true 或 false')
+}
+
+/**
+ * 解析打开抖音聊天页后是否暂停后续步骤。
+ *
+ * @returns 需要等待用户按回车键时返回 true，否则返回 false。
+ */
+function resolvePauseAfterPageOpen(): boolean {
+  const pauseAfterPageOpen = process.env.PAUSE_AFTER_PAGE_OPEN?.trim().toLowerCase()
+
+  if (!pauseAfterPageOpen || pauseAfterPageOpen === 'false') {
+    return false
+  }
+
+  if (pauseAfterPageOpen === 'true') {
+    return true
+  }
+
+  throw new Error('PAUSE_AFTER_PAGE_OPEN 只能配置为 true 或 false')
 }
 
 /**

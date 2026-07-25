@@ -143,7 +143,6 @@ cp .env.example .env
 | `YIYAN_INCLUDE_SOURCE` | ❌ | `true` | 是否携带一言出处，设置为 `false` 时只发送正文 |
 | `PLAYWRIGHT_BROWSER_PATH` | ❌ | - | 本机 Chrome / Chromium / Edge 可执行文件路径，不填则使用 Playwright 默认浏览器 |
 | `PLAYWRIGHT_HEADLESS` | ❌ | `true` | 是否使用无头模式 |
-| `AUTO_CLOSE` | ❌ | `true` | 发送完成后是否自动关闭浏览器 |
 
 `DOUYIN_TARGET_NAMES` 示例：
 
