@@ -32,6 +32,7 @@ jobs:
         env:
           DOUYIN_COOKIE: ${{ secrets.DOUYIN_COOKIE }}
           DOUYIN_TARGET_NAMES: ${{ secrets.DOUYIN_TARGET_NAMES }}
+          DOUYIN_TARGET_IDS: ${{ secrets.DOUYIN_TARGET_IDS }}
           YIYAN_INCLUDE_SOURCE: ${{ secrets.YIYAN_INCLUDE_SOURCE }}
         run: bun src/main.ts
 

@@ -17,20 +17,20 @@
 
 ## ✨ 项目简介
 
-本项目是一个基于 **Playwright + TypeScript** 的抖音聊天自动化脚本。它会携带你配置的抖音 Cookie 打开聊天页，按配置的会话名称依次定位聊天对象，并从 `assets/yiyan.json` 中随机挑选一言发送出去。
+本项目是一个基于 **Playwright + TypeScript** 的抖音聊天自动化脚本。它会携带你配置的抖音 Cookie 打开聊天页，按配置的昵称或抖音号依次定位聊天对象，并从 `assets/yiyan.json` 中随机挑选一言发送出去。
 
 适合放到 GitHub Actions 中定时运行，也可以在本地用 `pnpm dev` 手动执行。
 
 ## 🚀 功能特性
 
 - 🎭 **Cookie 登录** - 通过 `DOUYIN_COOKIE` 注入抖音登录态，无需脚本内输入账号密码
-- 🎯 **多会话发送** - 通过 `DOUYIN_TARGET_NAMES` 配置多个聊天对象
+- 🎯 **多会话发送** - 通过昵称或抖音号配置多个聊天对象
 - 💬 **随机一言** - 每次从 `assets/yiyan.json` 随机挑选一条 `hitokoto`，默认以 `——「出处」` 的格式附上来源
 - 🤖 **定时续火** - 通过 Github Action 每天 0 点自动续火（但是 Github 定时任务要排队，可能会延迟几个小时）
 
 ## 🧰 准备工作
 
-在配置 GitHub Actions 或本地 `.env` 之前，需要先准备抖音 Cookie 和要发送消息的会话名称。
+在配置 GitHub Actions 或本地 `.env` 之前，需要先准备抖音 Cookie，以及要发送消息的会话昵称或抖音号。
 
 ### 1️⃣ 获取抖音 Cookie
 
@@ -98,7 +98,8 @@ Settings -> Secrets and variables -> Actions -> New repository secret
 | Secret | 必填 | 说明 |
 |:---|:---:|:---|
 | `DOUYIN_COOKIE` | ✅ | 抖音 Cookie JSON 字符串数组 （上面用浏览器插件获取的那个） |
-| `DOUYIN_TARGET_NAMES` | ✅ | 需要续火的朋友的用户名称， JSON 字符串数组，例如 ["暮邵落白"] （不会写 JSON 可以问 AI） |
+| `DOUYIN_TARGET_NAMES` | ❌ | 需要续火的朋友的昵称 JSON 字符串数组，与 `DOUYIN_TARGET_IDS` 至少配置一个 |
+| `DOUYIN_TARGET_IDS` | ❌ | 需要续火的朋友的抖音号 JSON 字符串数组，与 `DOUYIN_TARGET_NAMES` 至少配置一个 |
 | `YIYAN_INCLUDE_SOURCE` | ❌ | 是否携带一言出处，默认开启；设置为 `false` 时只发送正文 |
 | `MAIL_ADDRESS` | ❌ | 任务失败提醒的收件邮箱，同时作为邮件发件人地址 |
 | `MAIL_USERNAME` | ❌ | QQ 邮箱 SMTP 登录账号，通常与 `MAIL_ADDRESS` 相同 |
@@ -139,15 +140,17 @@ cp .env.example .env
 | 变量 | 必填 | 默认值 | 说明 |
 |:---|:---:|:---:|:---|
 | `DOUYIN_COOKIE` | ✅ | - | 抖音 Cookie JSON 字符串数组 |
-| `DOUYIN_TARGET_NAMES` | ✅ | - | 要发送消息的会话名称 JSON 字符串数组 |
+| `DOUYIN_TARGET_NAMES` | ❌ | - | 要发送消息的会话昵称 JSON 字符串数组，与 `DOUYIN_TARGET_IDS` 至少配置一个 |
+| `DOUYIN_TARGET_IDS` | ❌ | - | 要发送消息的抖音号 JSON 字符串数组，与 `DOUYIN_TARGET_NAMES` 至少配置一个 |
 | `YIYAN_INCLUDE_SOURCE` | ❌ | `true` | 是否携带一言出处，设置为 `false` 时只发送正文 |
 | `PLAYWRIGHT_BROWSER_PATH` | ❌ | - | 本机 Chrome / Chromium / Edge 可执行文件路径，不填则使用 Playwright 默认浏览器 |
 | `PLAYWRIGHT_HEADLESS` | ❌ | `true` | 是否使用无头模式 |
 
-`DOUYIN_TARGET_NAMES` 示例：
+目标配置示例：
 
 ```dotenv
 DOUYIN_TARGET_NAMES='["暮邵落白"]'
+DOUYIN_TARGET_IDS='["xinggong62112311"]'
 ```
 
 `DOUYIN_COOKIE` 使用准备工作中导出的 Cookie JSON 数组：
@@ -162,7 +165,7 @@ DOUYIN_COOKIE='[{"domain":".douyin.com","expirationDate":1800175766.87008,"hostO
 pnpm dev
 ```
 
-脚本会打开 `https://www.douyin.com/chat`，等待页面加载，定位配置中的会话名称，发送随机一言，并在发送后等待约 5 秒再退出。
+脚本会打开 `https://www.douyin.com/chat`，等待页面加载，定位配置中的会话昵称或抖音号，发送随机一言，并在发送后等待约 5 秒再退出。
 
 ## 🔨 开发命令
 

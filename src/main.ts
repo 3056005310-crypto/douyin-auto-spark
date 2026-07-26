@@ -8,6 +8,7 @@ import type { Yiyan } from './types/yiyan'
 
 const DOUYIN_COOKIE_KEY = 'DOUYIN_COOKIE'
 const DOUYIN_TARGET_NAMES_KEY = 'DOUYIN_TARGET_NAMES'
+const DOUYIN_TARGET_IDS_KEY = 'DOUYIN_TARGET_IDS'
 const YIYAN_INCLUDE_SOURCE_KEY = 'YIYAN_INCLUDE_SOURCE'
 const FAILURE_SCREENSHOT_PATH = 'artifacts/failure-screenshot.png'
 
@@ -23,7 +24,13 @@ async function main(): Promise<void> {
   const autoClose = resolveAutoClose()
   const includeYiyanSource = resolveYiyanIncludeSource()
   const douyinCookies = resolveDouyinCookies()
-  const targetNames = resolveDouyinTargetNames()
+  const targetNames = resolveDouyinTargets(DOUYIN_TARGET_NAMES_KEY)
+  const targetIds = resolveDouyinTargets(DOUYIN_TARGET_IDS_KEY)
+
+  if (targetNames.length === 0 && targetIds.length === 0) {
+    throw new Error(`请至少配置 ${DOUYIN_TARGET_NAMES_KEY} 或 ${DOUYIN_TARGET_IDS_KEY}`)
+  }
+
   const yiyans = await resolveYiyans()
   const browser = await chromium.launch({
     headless,
@@ -55,10 +62,20 @@ async function main(): Promise<void> {
     const searchInput = page.locator('input.semi-input[placeholder="搜索"]').first()
     await searchInput.waitFor({ state: 'visible', timeout: 10000 })
 
-    for (const targetName of targetNames) {
-      const name = String(targetName).trim()
-      if (!name) continue
+    const names = new Set(targetNames)
 
+    for (const targetId of targetIds) {
+      const name = await getDouyinNicknameById(page, targetId)
+
+      if (!name) {
+        throw new Error(`抖音号不存在：${targetId}`)
+      }
+
+      console.log(`查询到抖音号 ${targetId} 对应昵称：${name}`)
+      names.add(name)
+    }
+
+    for (const name of names) {
       console.log(`开始搜索会话：${name}`)
       await searchInput.fill('')
       await searchInput.fill(name)
@@ -112,6 +129,78 @@ async function main(): Promise<void> {
     // 无论任务是否失败，都关闭浏览器以释放 Playwright 持有的进程句柄。
     await browser.close()
   }
+}
+
+/**
+ * 通过抖音页面内的搜索接口精确查询抖音号对应的用户名。
+ *
+ * @param page 已打开并登录抖音的 Playwright 页面。
+ * @param douyinId 要查询的抖音号。
+ * @returns 找到完全匹配的用户时返回用户名，否则返回 null。
+ */
+async function getDouyinNicknameById(page: Page, douyinId: string): Promise<string | null> {
+  return page.evaluate(async (id) => {
+    type SearchUser = {
+      nickname?: unknown
+      unique_id?: unknown
+      short_id?: unknown
+    }
+    type SearchItem = SearchUser & {
+      user_info?: SearchUser
+    }
+
+    const params = new URLSearchParams({
+      device_platform: 'webapp',
+      aid: '6383',
+      channel: 'channel_pc_web',
+      pc_client_type: '1',
+      cookie_enabled: 'true',
+      keyword: id,
+      search_channel: 'aweme_user_web',
+      search_source: 'switch_tab',
+      query_correct_type: '1',
+      is_filter_search: '0',
+      from_group_id: '',
+      disable_rs: '0',
+      offset: '0',
+      count: '20',
+      need_filter_settings: '1',
+      list_type: 'single',
+      version_code: '170400',
+      version_name: '17.4.0',
+    })
+    const response = await fetch(`/aweme/v1/web/discover/search/?${params.toString()}`, {
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`抖音接口请求失败：HTTP ${response.status}`)
+    }
+
+    const data = (await response.json()) as {
+      status_code?: number
+      status_msg?: string
+      user_list?: SearchItem[]
+    }
+
+    if (data.status_code !== 0) {
+      throw new Error(
+        `抖音接口返回异常：${JSON.stringify({
+          status_code: data.status_code,
+          status_msg: data.status_msg,
+        })}`,
+      )
+    }
+
+    const user = (data.user_list ?? [])
+      .map((item) => item.user_info ?? item)
+      .find((item) => String(item.unique_id ?? '') === id || String(item.short_id ?? '') === id)
+
+    return user ? String(user.nickname ?? '') : null
+  }, douyinId)
 }
 
 /**
@@ -245,28 +334,28 @@ function resolveDouyinCookies(): Cookie[] {
 }
 
 /**
- * 解析需要发送消息的抖音会话名称。
+ * 解析可选的抖音目标数组。
+ *
+ * @param key 环境变量名称。
+ * @returns 未配置时返回空数组，否则返回去除首尾空白后的非空字符串数组。
  */
-function resolveDouyinTargetNames(): string[] {
-  const targetNamesText = process.env[DOUYIN_TARGET_NAMES_KEY]?.trim()
+function resolveDouyinTargets(key: string): string[] {
+  const targetsText = process.env[key]?.trim()
 
-  if (!targetNamesText) {
-    throw new Error(
-      `请设置环境变量 ${DOUYIN_TARGET_NAMES_KEY}，或在 .env 中配置 ${DOUYIN_TARGET_NAMES_KEY}`,
-    )
+  if (!targetsText) {
+    return []
   }
 
-  const targetNames = JSON.parse(targetNamesText) as string[]
+  const targets = JSON.parse(targetsText) as string[]
 
   if (
-    !Array.isArray(targetNames) ||
-    targetNames.length === 0 ||
-    targetNames.some((targetName) => typeof targetName !== 'string' || !targetName.trim())
+    !Array.isArray(targets) ||
+    targets.some((target) => typeof target !== 'string' || !target.trim())
   ) {
-    throw new Error(`${DOUYIN_TARGET_NAMES_KEY} 必须是非空字符串数组 JSON`)
+    throw new Error(`${key} 必须是字符串数组 JSON`)
   }
 
-  return targetNames.map((targetName) => targetName.trim())
+  return targets.map((target) => target.trim())
 }
 
 /**
