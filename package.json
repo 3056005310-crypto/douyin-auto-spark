@@ -9,7 +9,11 @@
     "type-check": "tsc --noEmit",
     "lint:check": "oxlint",
     "format:check": "oxfmt --check",
-    "fix": "oxlint --fix && oxfmt"
+    "fix": "oxlint --fix && oxfmt",
+    "watchdog:dev": "pnpm --filter @douyin-auto-spark/watchdog dev",
+    "watchdog:check": "pnpm --filter @douyin-auto-spark/watchdog check",
+    "watchdog:build": "pnpm --filter @douyin-auto-spark/watchdog build",
+    "watchdog:deploy": "pnpm --filter @douyin-auto-spark/watchdog deploy"
   },
   "dependencies": {
     "dotenv": "17.4.2",

@@ -27,6 +27,7 @@
 - 🎯 **多会话发送** - 通过 `DOUYIN_TARGET_NAMES` 配置多个聊天对象
 - 💬 **随机一言** - 每次从 `assets/yiyan.json` 随机挑选一条 `hitokoto`，默认以 `——「出处」` 的格式附上来源
 - 🤖 **定时续火** - 通过 Github Action 每天 0 点自动续火（但是 Github 定时任务要排队，可能会延迟几个小时）
+- 🐶 **Watchdog（可选）** - `apps/watchdog` 提供独立的 Cloudflare + GitHub App 守护服务，可检测当天 workflow 漏跑/失败并按策略补跑；根项目仍保持纯 TypeScript，不依赖 Vite/Vite+。
 
 ## 🧰 准备工作
 
@@ -228,6 +229,12 @@ douyin-auto-spark/
 | `tsx` | 本地通过 `pnpm dev` 运行 TypeScript 脚本 |
 | `typescript` | 执行 `pnpm typecheck` 类型检查 |
 | `oxlint` / `oxfmt` | 代码检查与格式化 |
+
+## 🐶 Watchdog
+
+仓库包含一个独立的 `apps/watchdog` 子项目，用于给 GitHub Actions 增加外部兜底。它通过 GitHub App 授权访问用户选择的仓库，运行在 Cloudflare Workers + D1 + Cron Triggers 上；根目录的 Playwright 续火脚本保持原样。
+
+详细部署和 GitHub App 权限配置见 [`apps/watchdog/README.md`](apps/watchdog/README.md)。
 
 ## 📄 许可证
 

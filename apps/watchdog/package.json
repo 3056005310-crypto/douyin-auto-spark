@@ -1,0 +1,23 @@
+{
+  "name": "@douyin-auto-spark/watchdog",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "check": "vp check",
+    "type-check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.worker.json",
+    "preview": "vp preview",
+    "deploy": "vp build && wrangler deploy",
+    "cf:types": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply douyin-auto-spark-watchdog --local",
+    "db:migrate:remote": "wrangler d1 migrations apply douyin-auto-spark-watchdog --remote"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.52.1",
+    "@cloudflare/workers-types": "5.20260814.1",
+    "vite-plus": "0.2.9",
+    "wrangler": "4.123.0"
+  }
+}

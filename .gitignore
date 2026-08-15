@@ -132,3 +132,7 @@ dist
 .pnp.*
 
 /.idea
+
+# Cloudflare Workers local state and secrets
+.wrangler/
+.dev.vars*

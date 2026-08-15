@@ -6,6 +6,7 @@
     "node_modules",
     "dist",
     "coverage",
+    "apps/watchdog",
     "**/*.{yml,yaml}",
     "assets/yiyan.json",
     "**/*.md"
