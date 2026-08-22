@@ -1,0 +1,33 @@
+name: "GitHub Actions 环境自检"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-22.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.0-jammy
+    timeout-minutes: 10
+
+    steps:
+      - name: 克隆当前仓库
+        uses: actions/checkout@v7
+
+      - name: 安装 Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: 安装运行时依赖
+        run: bun install --production --ignore-scripts
+
+      - name: 启动无头 Chrome
+        run: |
+          bun -e 'import { chromium } from "playwright"; const browser = await chromium.launch({ headless: true }); console.log(`Playwright Chrome ${await browser.version()} 启动成功`); await browser.close();'
+
+      - name: 自检完成
+        run: echo "GitHub Actions、Bun、Playwright 和无头 Chrome 均可用"
