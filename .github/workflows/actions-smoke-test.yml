@@ -17,6 +17,9 @@ jobs:
       - name: 克隆当前仓库
         uses: actions/checkout@v7
 
+      - name: 安装 unzip
+        run: apt-get update && apt-get install -y unzip
+
       - name: 安装 Bun
         uses: oven-sh/setup-bun@v2
         with:
